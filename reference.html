@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grammar &amp; Reference</title>
+<style>
+  :root { --bg:#f4f6fb; --card:#fff; --ink:#1d2433; --muted:#667085; --line:#e3e7ef; --accent:#2f5bea; --accent-ink:#fff; --hi:#8a3b00; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#12151c; --card:#1b202b; --ink:#e8ecf4; --muted:#9aa4b8; --line:#2a3140; --accent:#6c8cff; --accent-ink:#0d1220; --hi:#ffb36b; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  .wrap { max-width:980px; margin:0 auto; padding:16px; }
+  header { display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  h1 { font-size:20px; margin:0; }
+  a.btn, button { font:inherit; cursor:pointer; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--ink); padding:7px 14px; text-decoration:none; }
+  a.btn:hover, button:hover { border-color:var(--accent); }
+  nav { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+  nav button.on { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:600; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px; margin-bottom:14px; }
+  h2 { font-size:18px; margin:0 0 4px; }
+  h3 { font-size:15px; margin:18px 0 6px; color:var(--muted); }
+  .intro { color:var(--muted); margin:0 0 8px; }
+  .scroll { overflow-x:auto; }
+  table { border-collapse:collapse; width:100%; font-size:15px; }
+  th, td { border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top; }
+  th { background:var(--bg); font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+  td.say { cursor:pointer; }
+  td.say:hover { background:var(--bg); outline:1px solid var(--accent); }
+  td.hi { color:var(--hi); }
+  p.text { margin:8px 0; }
+  .tip { color:var(--muted); font-size:13px; margin-top:10px; }
+  #empty { display:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Grammar &amp; Reference</h1>
+    <a class="btn" href="index.html">← Back to words</a>
+  </header>
+  <nav id="nav"></nav>
+  <div id="out"></div>
+  <p class="tip">Tip: click any English cell to hear it. Hinglish cells are for reading only.</p>
+  <div class="card" id="empty">Reference data (reference.js) was not found next to this page.</div>
+</div>
+<script src="reference.js"></script>
+<script>
+(function () {
+  var R = window.REFERENCE || [];
+  var out = document.getElementById("out"), nav = document.getElementById("nav");
+  if (!R.length) { document.getElementById("empty").style.display = "block"; return; }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  var synth = window.speechSynthesis;
+  function speak(t) {
+    if (!synth || !t) return;
+    synth.cancel();
+    var u = new SpeechSynthesisUtterance(t.replace(/\s*\/\s*/g, ", "));
+    var v = (synth.getVoices() || []).filter(function (x) { return /^en[-_](GB|IN|US)/i.test(x.lang); })[0];
+    if (v) { u.voice = v; u.lang = v.lang; } else u.lang = "en-GB";
+    u.rate = 0.9; synth.speak(u);
+  }
+  function block(b) {
+    if (b.type === "text") return '<p class="text">' + esc(b.text) + "</p>";
+    if (b.type === "table") {
+      var hiCol = (b.columns || []).map(function (c) { return /hinglish/i.test(c); });
+      return (b.caption ? "<h3>" + esc(b.caption) + "</h3>" : "") + '<div class="scroll"><table><thead><tr>' +
+        (b.columns || []).map(function (c) { return "<th>" + esc(c) + "</th>"; }).join("") + "</tr></thead><tbody>" +
+        (b.rows || []).map(function (r) {
+          return "<tr>" + r.map(function (c, i) {
+            return hiCol[i] ? '<td class="hi">' + esc(c) + "</td>" : '<td class="say" data-say="' + esc(c) + '">' + esc(c) + "</td>";
+          }).join("") + "</tr>";
+        }).join("") + "</tbody></table></div>";
+    }
+    return "";
+  }
+  function show(i) {
+    var s = R[i];
+    out.innerHTML = '<div class="card"><h2>' + esc(s.title) + "</h2>" + (s.intro ? '<p class="intro">' + esc(s.intro) + "</p>" : "") +
+      (s.blocks || []).map(block).join("") + "</div>";
+    Array.prototype.forEach.call(nav.children, function (b, k) { b.className = k === i ? "on" : ""; });
+    try { localStorage.setItem("englishLearner.refTab", String(i)); } catch (e) {}
+  }
+  nav.innerHTML = R.map(function (s, i) { return '<button data-i="' + i + '">' + esc(s.title) + "</button>"; }).join("");
+  nav.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) show(+b.dataset.i); });
+  out.addEventListener("click", function (e) { var td = e.target.closest("td.say"); if (td) speak(td.dataset.say); });
+  var start = 0; try { start = Math.min(R.length - 1, +localStorage.getItem("englishLearner.refTab") || 0); } catch (e) {}
+  show(start);
+})();
+</script>
+</body>
+</html>

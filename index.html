@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>English Word Learner</title>
+<style>
+  :root {
+    --bg:#f4f6fb; --card:#fff; --ink:#1d2433; --muted:#667085; --line:#e3e7ef;
+    --accent:#2f5bea; --accent-ink:#fff; --ok:#12805c; --okbg:#e3f6ee; --warn:#b54708; --warnbg:#fff1e0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#12151c; --card:#1b202b; --ink:#e8ecf4; --muted:#9aa4b8; --line:#2a3140;
+      --accent:#6c8cff; --accent-ink:#0d1220; --ok:#4fd1a1; --okbg:#143428; --warn:#ffb36b; --warnbg:#3a2814; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  .wrap { max-width:760px; margin:0 auto; padding:16px; }
+  header { display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  h1 { font-size:20px; margin:0; }
+  .stats { font-size:14px; color:var(--muted); }
+  .stats b { color:var(--ink); }
+  .bar { height:8px; background:var(--line); border-radius:99px; overflow:hidden; margin-bottom:12px; }
+  .bar > i { display:block; height:100%; width:0; background:var(--ok); transition:width .3s; }
+  .tools { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px; font-size:14px; }
+  .tools label { color:var(--muted); display:flex; gap:6px; align-items:center; }
+  select, input[type=range] { accent-color:var(--accent); }
+  select { background:var(--card); color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:6px 8px; font:inherit; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 4px; max-height:220px; overflow:auto; }
+  .refl { color:var(--accent); text-decoration:none; font-size:14px; font-weight:600; border:1px solid var(--line); border-radius:99px; padding:4px 12px; background:var(--card); }
+  .listbox { margin-bottom:14px; }
+  .listbox summary { cursor:pointer; color:var(--muted); font-size:14px; }
+  input[type=search] { flex:1 1 160px; min-width:120px; background:var(--card); color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:7px 10px; font:inherit; }
+  .chip { border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:99px; padding:4px 11px; font:inherit; font-size:13px; cursor:pointer; }
+  .chip.cur { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent) inset; }
+  .chip.learned { background:var(--okbg); border-color:var(--ok); }
+  .chip.practice { background:var(--warnbg); border-color:var(--warn); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; }
+  .top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+  .word { font-size:34px; font-weight:700; margin:0; line-height:1.15; }
+  .meta { color:var(--muted); font-size:15px; margin-top:4px; }
+  .meta em { color:var(--accent); font-style:normal; font-weight:600; }
+  .badge { font-size:12px; font-weight:600; padding:3px 10px; border-radius:99px; }
+  .badge.learned { background:var(--okbg); color:var(--ok); }
+  .badge.practice { background:var(--warnbg); color:var(--warn); }
+  button { font:inherit; cursor:pointer; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--ink); padding:8px 14px; }
+  button:hover { border-color:var(--accent); }
+  button.primary { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:600; }
+  .row { display:flex; flex-wrap:wrap; gap:8px; margin:14px 0; }
+  h3 { font-size:12px; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:18px 0 4px; }
+  p { margin:0; }
+  .hi { font-size:17px; }
+  .tags { display:flex; flex-wrap:wrap; gap:6px; }
+  .tag { border:1px solid var(--line); border-radius:8px; padding:3px 10px; background:var(--bg); cursor:pointer; font:inherit; font-size:15px; }
+  .tag.ant { border-color:var(--warn); }
+  .ex { display:flex; gap:10px; align-items:center; }
+  .note { background:var(--bg); border-left:3px solid var(--accent); padding:8px 12px; border-radius:6px; font-size:15px; }
+  .nav { display:flex; justify-content:space-between; gap:8px; margin-top:16px; flex-wrap:wrap; }
+  .nav .mid { display:flex; gap:8px; flex-wrap:wrap; }
+  .learn { background:var(--okbg); border-color:var(--ok); color:var(--ok); font-weight:600; }
+  .prac { background:var(--warnbg); border-color:var(--warn); color:var(--warn); font-weight:600; }
+  .foot { text-align:center; color:var(--muted); font-size:13px; margin-top:16px; }
+  .foot button { font-size:13px; padding:4px 10px; }
+  #warn { display:none; background:var(--warnbg); color:var(--warn); padding:8px 12px; border-radius:8px; font-size:14px; margin-bottom:12px; }
+  @media (max-width:520px) { .word { font-size:28px; } .wrap { padding:12px; } .card { padding:16px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>English Word Learner</h1>
+    <div class="stats" id="stats"></div>
+    <a class="refl" href="reference.html">📘 Grammar &amp; Reference</a>
+  </header>
+  <div class="bar"><i id="bar"></i></div>
+  <div id="warn">Is browser mein awaaz (text-to-speech) support nahi hai. Chrome ya Edge use karein.</div>
+
+  <div class="tools">
+    <input id="search" type="search" placeholder="Search a word…" autocomplete="off">
+    <label>Letter
+      <select id="letter"></select>
+    </label>
+    <label>Show
+      <select id="filter">
+        <option value="all">All words</option>
+        <option value="new">Not marked yet</option>
+        <option value="practice">Need practice</option>
+        <option value="learned">Learned</option>
+      </select>
+    </label>
+  </div>
+  <div class="tools">
+    <label>Voice
+      <select id="voice"></select>
+    </label>
+    <label>Speed <input id="rate" type="range" min="0.5" max="1.2" step="0.05" value="0.9" style="width:90px"></label>
+    <button data-act="random" title="Random word from the current list">🎲 Random</button>
+  </div>
+
+  <details class="listbox">
+    <summary id="listsum">Word list</summary>
+    <div class="chips" id="chips"></div>
+  </details>
+  <div class="card" id="card"></div>
+  <div class="foot">
+    Shortcuts: ← → next/previous &nbsp; Space = play word &nbsp; L = learned &nbsp; P = practice<br><br>
+    <button id="reset">Reset progress</button>
+  </div>
+</div>
+
+<script src="words.js"></script>
+<!-- one data file per letter; add a line here when a new words_X.js is ready -->
+<script src="words_A.js"></script>
+<script src="words_B.js"></script>
+<script src="words_C.js"></script>
+<script src="words_D.js"></script>
+<script src="words_E.js"></script>
+<script src="words_F.js"></script>
+<script src="words_G.js"></script>
+<script src="words_H.js"></script>
+<script src="words_I.js"></script>
+<script src="words_J.js"></script>
+<script src="words_K.js"></script>
+<script src="words_L.js"></script>
+<script src="words_M.js"></script>
+<script src="words_N.js"></script>
+<script src="words_O.js"></script>
+<script src="words_P.js"></script>
+<script src="words_Q.js"></script>
+<script src="words_R.js"></script>
+<script src="words_S.js"></script>
+<script src="words_T.js"></script>
+<script src="words_U.js"></script>
+<script src="words_V.js"></script>
+<script src="words_W.js"></script>
+<script src="words_X.js"></script>
+<script src="words_Y.js"></script>
+<script src="words_Z.js"></script>
+<script>
+(function () {
+  // hand-checked entries (words.js) win over generated ones for the same word
+  var curated = window.WORDS || [];
+  var have = {};
+  curated.forEach(function (w) { have[w.word] = true; });
+  var W = curated.slice();
+  Object.keys(window).filter(function (k) { return /^WORDS_[A-Z]$/.test(k); }).forEach(function (k) {
+    window[k].forEach(function (w) { if (!have[w.word]) W.push(w); });
+  });
+  W.sort(function (a, b) { return a.word < b.word ? -1 : a.word > b.word ? 1 : 0; });
+  var KEY = "englishLearner.progress.v1";
+  var progress = {};
+  try { progress = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { progress = {}; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(progress)); } catch (e) {} }
+  function id(w) { return w.word + "|" + w.pos; }
+
+  var $ = function (s) { return document.getElementById(s); };
+  var state = { cur: 0, filter: "all", q: "", letter: "all" };
+  try { var saved = JSON.parse(localStorage.getItem("englishLearner.last") || "{}"); if (saved.word) { var si = W.findIndex(function (w) { return id(w) === saved.word; }); if (si >= 0) state.cur = si; } } catch (e) {}
+
+  // ---- speech ----
+  var synth = window.speechSynthesis;
+  var voices = [];
+  if (!synth) $("warn").style.display = "block";
+  function loadVoices() {
+    if (!synth) return;
+    voices = synth.getVoices().filter(function (v) { return /^en[-_]/i.test(v.lang); });
+    var sel = $("voice"), prev = sel.value;
+    sel.innerHTML = "";
+    voices.forEach(function (v, i) {
+      var o = document.createElement("option");
+      o.value = i; o.textContent = v.name + " (" + v.lang + ")";
+      sel.appendChild(o);
+    });
+    var pref = voices.findIndex(function (v) { return /en-GB|en-IN/i.test(v.lang); });
+    sel.value = prev || (pref >= 0 ? pref : 0);
+  }
+  if (synth) { loadVoices(); synth.onvoiceschanged = loadVoices; }
+  function speak(text, rate) {
+    if (!synth) return;
+    synth.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    var v = voices[+$("voice").value];
+    if (v) { u.voice = v; u.lang = v.lang; } else u.lang = "en-GB";
+    u.rate = rate || +$("rate").value;
+    synth.speak(u);
+  }
+
+  // ---- data helpers ----
+  function visible() {
+    var q = state.q.trim().toLowerCase();
+    return W.map(function (w, i) { return i; }).filter(function (i) {
+      var w = W[i], s = progress[id(w)];
+      if (state.letter !== "all" && w.word.charAt(0) !== state.letter) return false;
+      if (q && w.word.indexOf(q) !== 0 && w.word.indexOf(q) < 0) return false;
+      if (state.filter === "all") return true;
+      if (state.filter === "new") return !s;
+      return s === state.filter;
+    });
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  // ---- render ----
+  function renderStats() {
+    var l = 0, p = 0;
+    W.forEach(function (w) { var s = progress[id(w)]; if (s === "learned") l++; else if (s === "practice") p++; });
+    $("stats").innerHTML = "<b>" + l + "</b> learned · <b>" + p + "</b> to practise · <b>" + (W.length - l - p) + "</b> new";
+    $("bar").style.width = (W.length ? (l / W.length) * 100 : 0) + "%";
+  }
+  function renderChips() {
+    var vis = visible();
+    var p = vis.indexOf(state.cur);
+    $("listsum").textContent = "Word list — " + vis.length + " words" + (p >= 0 ? " (now " + (p + 1) + " of " + vis.length + ")" : "");
+    // show a window of 300 words around the current one so the list stays fast
+    var from = Math.max(0, (p >= 0 ? p : 0) - 100), shown = vis.slice(from, from + 300);
+    $("chips").innerHTML = shown.map(function (i) {
+      var w = W[i], s = progress[id(w)] || "";
+      return '<button class="chip ' + s + (i === state.cur ? " cur" : "") + '" data-i="' + i + '">' +
+        esc(w.word) + (w.pos ? " <small>(" + esc(w.pos.slice(0, 1)) + ")</small>" : "") + "</button>";
+    }).join("") || '<span class="stats">Is filter mein koi word nahi hai.</span>';
+  }
+  function tags(list, cls) {
+    if (!list || !list.length) return '<span class="stats">—</span>';
+    return '<div class="tags">' + list.map(function (t) {
+      return '<button class="tag ' + cls + '" data-say="' + esc(t) + '" title="Listen">🔊 ' + esc(t) + "</button>";
+    }).join("") + "</div>";
+  }
+  // 10 example sentences: one sent_X.js per letter, loaded the first time a word of that letter is shown
+  var sentState = {};
+  function sentBlock(w) {
+    var L = w.word.charAt(0).toUpperCase(), d = window["SENT_" + L];
+    if (!d) {
+      if (!sentState[L]) {
+        sentState[L] = "loading";
+        var sc = document.createElement("script");
+        sc.src = "sent_" + L + ".js";
+        sc.onload = function () { sentState[L] = "ok"; var c = W[state.cur]; if (c && c.word.charAt(0).toUpperCase() === L) renderCard(); };
+        sc.onerror = function () { sentState[L] = "fail"; };
+        document.head.appendChild(sc);
+      }
+      return sentState[L] === "fail" ? "" : '<h3>Example sentences</h3><p class="stats">Loading…</p>';
+    }
+    var list = d[w.word];
+    if (!list) return "";
+    return '<h3>10 example sentences</h3><div class="row" style="margin:6px 0"><button data-act="allsent">▶ Play all 10</button><button data-act="stopsent">■ Stop</button></div>' +
+      list.map(function (s, i) {
+        return '<div class="ex"><button data-say="' + esc(s) + '" title="Listen">🔊</button><p><small class="stats">' + (i + 1) + ".</small> " + esc(s) + "</p></div>";
+      }).join("");
+  }
+  function renderCard() {
+    var w = W[state.cur];
+    if (!w) { $("card").innerHTML = "<p>Koi word nahi mila.</p>"; return; }
+    var s = progress[id(w)];
+    var badge = s ? '<span class="badge ' + s + '">' + (s === "learned" ? "Learned ✓" : "Need practice") + "</span>" : "";
+    $("card").innerHTML =
+      '<div class="top"><div>' +
+        '<h2 class="word">' + esc(w.word) + "</h2>" +
+        '<div class="meta">' + esc(w.pos) + (w.ipa ? " &nbsp;·&nbsp; <em>" + esc(w.ipa) + "</em>" : "") + (w.page ? " &nbsp;·&nbsp; dictionary page " + esc(w.page) : "") + "</div>" +
+      "</div>" + badge + "</div>" +
+      '<div class="row">' +
+        '<button class="primary" data-act="play">🔊 Listen</button>' +
+        '<button data-act="slow">🐢 Slow</button>' +
+        '<button data-act="x3">🔁 Repeat 3×</button>' +
+      "</div>" +
+      "<h3>Meaning (English)</h3><p>" + esc(w.en) + "</p>" +
+      '<h3>Meaning (Hinglish)</h3><p class="hi">' + esc(w.hi) + "</p>" +
+      "<h3>Synonyms</h3>" + tags(w.syn, "") +
+      "<h3>Antonyms</h3>" + tags(w.ant, "ant") +
+      (w.example ? '<h3>Example</h3><div class="ex"><button data-say="' + esc(w.example) + '" title="Listen">🔊</button><p>' + esc(w.example) + "</p></div>" : "") +
+      sentBlock(w) +
+      (w.note ? '<h3>Note</h3><p class="note">' + esc(w.note) + "</p>" : "") +
+      '<div class="nav">' +
+        '<button data-act="prev">← Previous</button>' +
+        '<div class="mid"><button class="prac" data-act="practice">Need practice</button><button class="learn" data-act="learned">I learned it ✓</button></div>' +
+        '<button class="primary" data-act="next">Next →</button>' +
+      "</div>";
+  }
+  function render() {
+    sentRun++;
+    renderStats(); renderChips(); renderCard();
+    try { if (W[state.cur]) localStorage.setItem("englishLearner.last", JSON.stringify({ word: id(W[state.cur]) })); } catch (e) {}
+  }
+
+  // ---- actions ----
+  function move(d) {
+    var vis = visible();
+    if (!vis.length) return;
+    var p = vis.indexOf(state.cur);
+    if (p < 0) { state.cur = vis[d > 0 ? 0 : vis.length - 1]; }
+    else state.cur = vis[(p + d + vis.length) % vis.length];
+    render();
+  }
+  function mark(s) {
+    var w = W[state.cur]; if (!w) return;
+    progress[id(w)] = s; save();
+    var vis = visible();
+    if (vis.indexOf(state.cur) >= 0) move(1); else { state.cur = vis[0] != null ? vis[0] : state.cur; render(); }
+  }
+  var sentRun = 0;
+  function say(w) { return w.say || w.word; }
+  function act(a) {
+    var w = W[state.cur];
+    if (a === "play") speak(say(w));
+    else if (a === "slow") speak(say(w), 0.55);
+    else if (a === "x3") { var n = 0; (function go() { if (n++ >= 3 || !synth) return; speak(say(w)); var chk = setInterval(function () { if (!synth.speaking) { clearInterval(chk); setTimeout(go, 400); } }, 150); })(); }
+    else if (a === "allsent") {
+      var sd = window["SENT_" + w.word.charAt(0).toUpperCase()], sl = sd && sd[w.word];
+      if (!sl || !synth) return;
+      var run = ++sentRun, k = 0;
+      (function nextS() {
+        if (run !== sentRun || k >= sl.length) return;
+        speak(sl[k++]);
+        var chk = setInterval(function () {
+          if (run !== sentRun) { clearInterval(chk); return; }
+          if (!synth.speaking) { clearInterval(chk); setTimeout(nextS, 600); }
+        }, 150);
+      })();
+    }
+    else if (a === "stopsent") { sentRun++; if (synth) synth.cancel(); }
+    else if (a === "random") { var v = visible(); if (v.length) { state.cur = v[Math.floor(Math.random() * v.length)]; render(); } }
+    else if (a === "prev") move(-1);
+    else if (a === "next") move(1);
+    else if (a === "learned") mark("learned");
+    else if (a === "practice") mark("practice");
+  }
+
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("button"); if (!t) return;
+    if (t.dataset.say) speak(t.dataset.say);
+    else if (t.dataset.act) act(t.dataset.act);
+    else if (t.dataset.i != null) { state.cur = +t.dataset.i; render(); }
+  });
+  function refilter() {
+    var vis = visible(); if (vis.length && vis.indexOf(state.cur) < 0) state.cur = vis[0];
+    render();
+  }
+  $("filter").addEventListener("change", function () { state.filter = this.value; refilter(); });
+  $("letter").addEventListener("change", function () { state.letter = this.value; refilter(); });
+  $("search").addEventListener("input", function () { state.q = this.value; refilter(); });
+  (function () {
+    var letters = {};
+    W.forEach(function (w) { letters[w.word.charAt(0)] = (letters[w.word.charAt(0)] || 0) + 1; });
+    $("letter").innerHTML = '<option value="all">All</option>' + Object.keys(letters).sort().map(function (l) {
+      return '<option value="' + l + '">' + l.toUpperCase() + " (" + letters[l] + ")</option>";
+    }).join("");
+  })();
+  $("reset").addEventListener("click", function () {
+    if (confirm("Saari progress reset karni hai?")) { progress = {}; save(); render(); }
+  });
+  document.addEventListener("keydown", function (e) {
+    if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === "ArrowRight") act("next");
+    else if (e.key === "ArrowLeft") act("prev");
+    else if (e.key === " ") { e.preventDefault(); act("play"); }
+    else if (e.key === "l" || e.key === "L") act("learned");
+    else if (e.key === "p" || e.key === "P") act("practice");
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
